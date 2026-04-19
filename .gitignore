@@ -1,0 +1,5 @@
+/.idea/
+/common/target/
+/data-reader/target/
+/data-writer/target/
+/ducklake-initializer/target/
