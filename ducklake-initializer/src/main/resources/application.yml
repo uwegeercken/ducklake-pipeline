@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: ducklake-initializer
+
+ducklake:
+  postgres:
+    host: ${POSTGRES_HOST:localhost}
+    port: ${POSTGRES_PORT:5432}
+    database: ${POSTGRES_DATABASE:dl1}
+    user: ${POSTGRES_USER:ducklake}
+    password: ${POSTGRES_PASSWORD:ducklake_secret}
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin_secret}
+    bucket: ${MINIO_BUCKET:ducklake1}
+  catalog:
+    name: ${DUCKLAKE_NAME:ducklake1}
+    schema: ${DUCKLAKE_SCHEMA:schema1}
+    table: ${DUCKLAKE_TABLE:geoname}

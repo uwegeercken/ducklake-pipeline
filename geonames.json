@@ -1,0 +1,12 @@
+[
+  {"geonameid": 2950159, "name": "Berlin", "asciiname": "Berlin", "country_code": "DE", "population": 3644826, "latitude": 52.52437, "longitude": 13.41053, "timezone": "Europe/Berlin"},
+  {"geonameid": 2867714, "name": "Munich", "asciiname": "Munich", "country_code": "DE", "population": 1260391, "latitude": 48.13743, "longitude": 11.57549, "timezone": "Europe/Berlin"},
+  {"geonameid": 2925533, "name": "Frankfurt am Main", "asciiname": "Frankfurt am Main", "country_code": "DE", "population": 753056, "latitude": 50.11552, "longitude": 8.68417, "timezone": "Europe/Berlin"},
+  {"geonameid": 2911298, "name": "Hamburg", "asciiname": "Hamburg", "country_code": "DE", "population": 1841179, "latitude": 53.57532, "longitude": 10.01534, "timezone": "Europe/Berlin"},
+  {"geonameid": 2886242, "name": "Cologne", "asciiname": "Cologne", "country_code": "DE", "population": 1060582, "latitude": 50.93333, "longitude": 6.95, "timezone": "Europe/Berlin"},
+  {"geonameid": 3247449, "name": "Aachen", "asciiname": "Aachen", "country_code": "DE", "population": 245885, "latitude": 50.77664, "longitude": 6.08342, "timezone": "Europe/Berlin"},
+  {"geonameid": 2892794, "name": "Kiel", "asciiname": "Kiel", "country_code": "DE", "population": 246243, "latitude": 54.32133, "longitude": 10.13489, "timezone": "Europe/Berlin"},
+  {"geonameid": 2831487, "name": "Schleswig", "asciiname": "Schleswig", "country_code": "DE", "population": 24310, "latitude": 54.52082, "longitude": 9.55472, "timezone": "Europe/Berlin"},
+  {"geonameid": 2862041, "name": "Nuremberg", "asciiname": "Nuremberg", "country_code": "DE", "population": 518365, "latitude": 49.45421, "longitude": 11.07752, "timezone": "Europe/Berlin"},
+  {"geonameid": 2879139, "name": "Leipzig", "asciiname": "Leipzig", "country_code": "DE", "population": 587857, "latitude": 51.33962, "longitude": 12.37129, "timezone": "Europe/Berlin"}
+]
