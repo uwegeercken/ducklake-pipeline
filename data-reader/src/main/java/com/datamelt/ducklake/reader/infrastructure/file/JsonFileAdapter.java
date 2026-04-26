@@ -26,8 +26,8 @@ public class JsonFileAdapter implements GeonameFileRepository {
 
     private final ObjectMapper objectMapper;
 
-    public JsonFileAdapter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public JsonFileAdapter() {
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override

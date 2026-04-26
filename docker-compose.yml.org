@@ -7,13 +7,13 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: dl1
+      POSTGRES_USER: ducklake
+      POSTGRES_PASSWORD: ducklake_secret
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ducklake -d dl1"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -25,8 +25,8 @@ services:
     ports:
       - "5050:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: admin@ducklake.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,22 +39,25 @@ services:
     container_name: kafka
     hostname: kafka
     ports:
-      - "9092:9092"   # EXTERNAL – erreichbar vom Mac (localhost:9092)
-      - "9094:9094"   # INTERNAL – Container-zu-Container (kafka:9094)
+      - "9092:9092"
     environment:
+      # KRaft
       KAFKA_CFG_NODE_ID: 1
       KAFKA_CFG_PROCESS_ROLES: broker,controller
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_CFG_LISTENERS: EXTERNAL://0.0.0.0:9092,INTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: EXTERNAL://localhost:9092,INTERNAL://kafka:9094
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      # Listeners – bitnami trennt intern INTERNAL/EXTERNAL/CONTROLLER
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Replikation (single node)
       KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_KRAFT_CLUSTER_ID: ${KAFKA_KRAFT_CLUSTER_ID}
+      # bitnami generiert Cluster-ID automatisch – kein Init-Container nötig
+      KAFKA_KRAFT_CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
     volumes:
       - kafka-data:/bitnami/kafka
     healthcheck:
@@ -72,7 +75,7 @@ services:
       - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: ducklake-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9094
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     depends_on:
       kafka:
         condition: service_healthy
@@ -85,8 +88,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin_secret
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
@@ -105,12 +108,9 @@ services:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-        sleep 5 &&
-        until mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}; do
-          echo 'Waiting for MinIO...' && sleep 3;
-        done &&
-        mc mb --ignore-existing local/${MINIO_BUCKET} &&
-        echo 'Bucket ${MINIO_BUCKET} ready'
+        mc alias set local http://minio:9000 minioadmin minioadmin_secret &&
+        mc mb --ignore-existing local/ducklake1 &&
+        echo 'Bucket ducklake1 ready'
       "
 
   # ── Service 1: ducklake-initializer ──────────────────────────────────────
@@ -125,19 +125,18 @@ services:
       minio-init:
         condition: service_completed_successfully
     environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET: ${MINIO_BUCKET}
-      DUCKLAKE_NAME: ${DUCKLAKE_NAME}
-      DUCKLAKE_SCHEMA: ${DUCKLAKE_SCHEMA}
-      DUCKLAKE_TABLE: ${DUCKLAKE_TABLE}
-      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: dl1
+      POSTGRES_USER: ducklake
+      POSTGRES_PASSWORD: ducklake_secret
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin_secret
+      MINIO_BUCKET: ducklake1
+      DUCKLAKE_NAME: ducklake1
+      DUCKLAKE_SCHEMA: schema1
+      DUCKLAKE_TABLE: geoname
     restart: on-failure
 
   # ── Service 2: data-reader ────────────────────────────────────────────────
@@ -152,10 +151,9 @@ services:
       ducklake-initializer:
         condition: service_completed_successfully
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      KAFKA_TOPIC: ${KAFKA_TOPIC}
-      DATA_FILE_PATH: ${DATA_FILE_PATH}
-      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: geoname-events
+      DATA_FILE_PATH: ./data/geonames.json
     volumes:
       - ./data:/data:ro
     restart: on-failure
@@ -172,23 +170,22 @@ services:
       ducklake-initializer:
         condition: service_completed_successfully
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      KAFKA_TOPIC: ${KAFKA_TOPIC}
-      KAFKA_GROUP_ID: ${KAFKA_GROUP_ID}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET: ${MINIO_BUCKET}
-      DUCKLAKE_NAME: ${DUCKLAKE_NAME}
-      DUCKLAKE_SCHEMA: ${DUCKLAKE_SCHEMA}
-      DUCKLAKE_TABLE: ${DUCKLAKE_TABLE}
-      BATCH_SIZE: ${BATCH_SIZE}
-      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: geoname-events
+      KAFKA_GROUP_ID: data-writer-group
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: dl1
+      POSTGRES_USER: ducklake
+      POSTGRES_PASSWORD: ducklake_secret
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin_secret
+      MINIO_BUCKET: ducklake1
+      DUCKLAKE_NAME: ducklake1
+      DUCKLAKE_SCHEMA: schema1
+      DUCKLAKE_TABLE: geoname
+      BATCH_SIZE: "100"
     restart: unless-stopped
 
 volumes:

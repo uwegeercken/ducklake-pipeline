@@ -88,6 +88,8 @@ public class DuckLakeGeonameRepository implements GeonameRepository {
         try (var stmt = conn.createStatement()) {
             stmt.execute("INSTALL ducklake");
             stmt.execute("LOAD ducklake");
+            stmt.execute("INSTALL postgres");
+            stmt.execute("LOAD postgres");
             stmt.execute("INSTALL httpfs");
             stmt.execute("LOAD httpfs");
         }
@@ -119,13 +121,14 @@ public class DuckLakeGeonameRepository implements GeonameRepository {
         var minio   = properties.getDucklake().getMinio();
         var catalog = properties.getDucklake().getCatalog();
 
-        try (var stmt = conn.createStatement()) {
-            stmt.execute("""
-                    ATTACH IF NOT EXISTS 'ducklake:%s' AS %s (DATA_PATH '%s')
+        String attachStatement = """
+                    ATTACH IF NOT EXISTS 'ducklake:postgres:%s' AS %s (DATA_PATH '%s', DATA_INLINING_ROW_LIMIT 0)
                     """.formatted(
-                    pg.toCatalogConnectionString(),
-                    catalog.getName(),
-                    minio.toDataPath()));
+                pg.toCatalogConnectionString(),
+                catalog.getName(),
+                minio.toDataPath());
+        try (var stmt = conn.createStatement()) {
+            stmt.execute(attachStatement);
         }
         log.info("DuckLake '{}' attached", catalog.getName());
     }

@@ -2,7 +2,7 @@ spring:
   application:
     name: data-reader
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -13,4 +13,4 @@ data-reader:
   kafka:
     topic: ${KAFKA_TOPIC:geoname-events}
   file:
-    path: ${DATA_FILE_PATH:/data/geonames.json}
+    path: ${DATA_FILE_PATH:./data/geonames.json}

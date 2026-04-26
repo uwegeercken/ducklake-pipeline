@@ -29,10 +29,9 @@ public class KafkaProducerAdapter implements GeonameEventPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public KafkaProducerAdapter(KafkaTemplate<String, String> kafkaTemplate,
-                                ObjectMapper objectMapper) {
+    public KafkaProducerAdapter(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override

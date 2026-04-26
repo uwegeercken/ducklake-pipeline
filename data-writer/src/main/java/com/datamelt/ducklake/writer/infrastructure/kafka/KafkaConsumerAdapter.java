@@ -36,10 +36,9 @@ public class KafkaConsumerAdapter {
     private final DataWriterProperties properties;
 
     public KafkaConsumerAdapter(PersistGeonamesUseCase persistUseCase,
-                                ObjectMapper objectMapper,
-                                DataWriterProperties properties) {
+                                                                DataWriterProperties properties) {
         this.persistUseCase = persistUseCase;
-        this.objectMapper   = objectMapper;
+        this.objectMapper   = new ObjectMapper();
         this.properties     = properties;
     }
 

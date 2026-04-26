@@ -56,7 +56,7 @@ public class DuckDbRepositoryAdapter implements DuckLakeRepository {
     public void attachDuckLake(String catalogConnectionString, String dataPath, String name) {
         log.info("Attaching DuckLake '{}' (data path: {})", name, dataPath);
         withConnection(conn -> execute(conn, """
-                ATTACH IF NOT EXISTS 'ducklake:%s' AS %s (DATA_PATH '%s')
+                ATTACH IF NOT EXISTS 'ducklake:postgres:%s' AS %s (DATA_PATH '%s')
                 """.formatted(catalogConnectionString, name, dataPath)));
     }
 

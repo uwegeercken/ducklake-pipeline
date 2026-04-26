@@ -48,7 +48,8 @@ public class DuckLakeProperties {
          *   postgresql://user:password@host:port/database
          */
         public String toCatalogConnectionString() {
-            return "postgresql://%s:%s@%s:%d/%s"
+            // libpq format required by DuckLake postgres extension
+            return "user=%s password=%s host=%s port=%d dbname=%s"
                     .formatted(user, password, host, port, database);
         }
     }

@@ -67,7 +67,8 @@ public class DataWriterProperties {
         public void setPassword(String password) { this.password = password; }
 
         public String toCatalogConnectionString() {
-            return "postgresql://%s:%s@%s:%d/%s"
+            // libpq format required by DuckLake postgres extension
+            return "user=%s password=%s host=%s port=%d dbname=%s"
                     .formatted(user, password, host, port, database);
         }
     }
