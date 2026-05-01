@@ -70,19 +70,19 @@ public class DuckDbRepositoryAdapter implements DuckLakeRepository {
     @Override
     public void createGeonameTableIfNotExists(String duckLakeName, String schema, String table) {
         log.info("Creating table if not exists: {}.{}.{}", duckLakeName, schema, table);
-        withConnection(conn -> execute(conn, """
-                CREATE TABLE IF NOT EXISTS %s.%s.%s (
-                    geonameid    BIGINT        NOT NULL,
-                    name         VARCHAR(200)  NOT NULL,
-                    asciiname    VARCHAR(200),
-                    country_code VARCHAR(2),
-                    population   BIGINT,
-                    latitude     DOUBLE,
-                    longitude    DOUBLE,
-                    timezone     VARCHAR(100),
-                    created_at   TIMESTAMPTZ   DEFAULT now()
-                )
-                """.formatted(duckLakeName, schema, table)));
+        String createTableStatement = """
+                    create table if not exists %s.%s.%s (
+                      id  uuid,
+                      first_name varchar,
+                      last_name varchar,
+                       email varchar,
+                       age bigint,
+                       address  struct(street varchar, housenumber bigint, city varchar, postalcode varchar, country varchar),
+                       created_at timestamp
+                    );
+                    """.formatted(duckLakeName, schema, table);
+
+        withConnection(conn -> execute(conn, createTableStatement.formatted(duckLakeName, schema, table)));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

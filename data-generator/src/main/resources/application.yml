@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: data-generator
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+
+data-generator:
+  kafka:
+    topic: ${KAFKA_TOPIC:person-events}
+  generator:
+    data-config: ${GENERATOR_DATA_CONFIG:/config/data-config.yml}
+    rows-per-interval: ${GENERATOR_ROWS_PER_INTERVAL:100}
+    interval-ms: ${GENERATOR_INTERVAL_MS:0}
+    # interval-ms=0  → einmalig generieren und beenden
+    # interval-ms>0  → alle N Millisekunden wiederholen

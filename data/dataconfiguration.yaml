@@ -1,0 +1,91 @@
+name: person_data
+databaseName: /tmp/datagenerator.duckdb
+tableName: person
+fields:
+  - name: id
+    type: randomuuid
+
+  - name: first_name
+    type: category
+    values:
+      - value: Anna
+      - value: Thomas
+      - value: Maria
+      - value: Peter
+      - value: Laura
+      - value: Michael
+      - value: Sophie
+      - value: Klaus
+
+  - name: last_name
+    type: category
+    values:
+      - value: Mueller
+      - value: Schmidt
+      - value: Weber
+      - value: Wagner
+      - value: Fischer
+      - value: Becker
+      - value: Hoffmann
+      - value: Koch
+
+  - name: email
+    type: regularexpression
+    options:
+      pattern: "[a-z]{5,10}[.][a-z]{4,8}[@][a-z]{4,8}[.][a-z]{2,3}"
+
+  - name: age
+    type: randomlong
+    options:
+      minValue: 18
+      maxValue: 80
+
+  - name: address.street
+    type: category
+    values:
+      - value: Main Street
+      - value: Oak Avenue
+      - value: Park Road
+      - value: Church Lane
+      - value: High Street
+      - value: Station Road
+      - value: Mill Lane
+
+  - name: address.housenumber
+    type: randomlong
+    options:
+      minValue: 1
+      maxValue: 200
+
+  - name: address.city
+    type: category
+    values:
+      - value: Berlin
+      - value: Munich
+      - value: Hamburg
+      - value: Frankfurt
+      - value: Cologne
+      - value: Stuttgart
+      - value: Dusseldorf
+
+  - name: address.postalcode
+    type: regularexpression
+    options:
+      pattern: "[0-9]{5}"
+
+  - name: address.country
+    type: category
+    values:
+      - value: Germany
+        weight: 70
+      - value: Austria
+        weight: 20
+      - value: Switzerland
+        weight: 10
+
+  - name: created_at
+    type: randomtimestamp
+    options:
+      minYear: 2023
+      maxYear: 2026
+      dateFormat: "yyyy-MM-dd HH:mm:ss"

@@ -13,7 +13,7 @@
   <modules>
     <module>common</module>
     <module>ducklake-initializer</module>
-    <module>data-reader</module>
+    <module>data-generator</module>
     <module>data-writer</module>
   </modules>
 
@@ -21,9 +21,9 @@
     <java.version>21</java.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spring-boot.version>3.4.1</spring-boot.version>
+    <spring-boot.version>4.0.6</spring-boot.version>
     <duckdb.version>1.5.2.0</duckdb.version>
-    <jackson.version>2.18.2</jackson.version>
+    <jackson.version>2.21.3</jackson.version>
   </properties>
 
   <dependencyManagement>
