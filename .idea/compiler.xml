@@ -7,10 +7,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="data-writer" />
+        <module name="data-generator" />
         <module name="common" />
-        <module name="data-reader" />
         <module name="ducklake-initializer" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="data-reader" target="21" />
+    </bytecodeTargetLevel>
   </component>
 </project>

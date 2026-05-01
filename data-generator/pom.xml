@@ -16,6 +16,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.datamelt</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
@@ -36,7 +41,12 @@
             <artifactId>datagenerator2</artifactId>
             <version>0.5.3</version>
         </dependency>
-
+        <!-- AWS S3 SDK for MinIO -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.25.11</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

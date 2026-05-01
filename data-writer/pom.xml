@@ -25,16 +25,19 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Jackson: deserialize S3FileReference from Kafka -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <!-- DuckDB JDBC: INSERT INTO ... SELECT * FROM read_json_auto(s3://...) -->
         <dependency>
             <groupId>org.duckdb</groupId>
             <artifactId>duckdb_jdbc</artifactId>
         </dependency>
 
+        <!-- common: S3FileReference -->
         <dependency>
             <groupId>com.datamelt</groupId>
             <artifactId>common</artifactId>
