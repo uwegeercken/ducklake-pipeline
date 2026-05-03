@@ -13,7 +13,7 @@ spring:
 
 data-writer:
   kafka:
-    topic: ${KAFKA_TOPIC:geoname-events}
+    topic: ${KAFKA_TOPIC:person-events}
   ducklake:
     postgres:
       host: ${POSTGRES_HOST:localhost}
@@ -29,6 +29,6 @@ data-writer:
     catalog:
       name: ${DUCKLAKE_NAME:ducklake1}
       schema: ${DUCKLAKE_SCHEMA:schema1}
-      table: ${DUCKLAKE_TABLE:geoname}
+      table: ${DUCKLAKE_TABLE:person}
   batch:
     size: ${BATCH_SIZE:100}

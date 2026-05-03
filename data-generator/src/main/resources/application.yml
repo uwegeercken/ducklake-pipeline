@@ -12,6 +12,12 @@ spring:
 data-generator:
   kafka:
     topic: ${KAFKA_TOPIC:person-events}
+  s3:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin_secret}
+    raw-bucket: ${MINIO_RAW_BUCKET:ducklake-raw}
+    table-name: ${GENERATOR_TABLE_NAME:person}
   generator:
     data-config: ${GENERATOR_DATA_CONFIG:/config/data-config.yml}
     rows-per-interval: ${GENERATOR_ROWS_PER_INTERVAL:100}

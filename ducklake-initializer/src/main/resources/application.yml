@@ -17,4 +17,4 @@ ducklake:
   catalog:
     name: ${DUCKLAKE_NAME:ducklake1}
     schema: ${DUCKLAKE_SCHEMA:schema1}
-    table: ${DUCKLAKE_TABLE:geoname}
+    table: ${DUCKLAKE_TABLE:person}

@@ -68,7 +68,7 @@ public class DuckDbRepositoryAdapter implements DuckLakeRepository {
     }
 
     @Override
-    public void createGeonameTableIfNotExists(String duckLakeName, String schema, String table) {
+    public void createTableIfNotExists(String duckLakeName, String schema, String table) {
         log.info("Creating table if not exists: {}.{}.{}", duckLakeName, schema, table);
         String createTableStatement = """
                     create table if not exists %s.%s.%s (

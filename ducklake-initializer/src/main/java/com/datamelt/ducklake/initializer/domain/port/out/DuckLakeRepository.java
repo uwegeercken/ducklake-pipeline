@@ -10,5 +10,5 @@ public interface DuckLakeRepository {
 
     void createSchemaIfNotExists(String duckLakeName, String schema);
 
-    void createGeonameTableIfNotExists(String duckLakeName, String schema, String table);
+    void createTableIfNotExists(String duckLakeName, String schema, String table);
 }

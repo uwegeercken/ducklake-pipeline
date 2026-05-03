@@ -82,7 +82,7 @@ For local development in IntelliJ, set Run Configuration environment variables:
 ```
 # Kafka
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-KAFKA_TOPIC=geoname-events
+KAFKA_TOPIC=person-events
 KAFKA_GROUP_ID=data-writer-group
 
 # PostgreSQL

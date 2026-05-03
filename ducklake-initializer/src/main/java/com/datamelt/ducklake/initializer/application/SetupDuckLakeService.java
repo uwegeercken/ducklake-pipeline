@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  *  2. S3 Secret für MinIO anlegen
  *  3. DuckLake ATTACH gegen Postgres-Katalog
  *  4. Schema anlegen
- *  5. Geoname-Tabelle anlegen
+ *  5. Tabelle anlegen
  */
 @Service
 public class SetupDuckLakeService implements SetupDuckLakeUseCase {
@@ -53,7 +53,7 @@ public class SetupDuckLakeService implements SetupDuckLakeUseCase {
                 catalog.getName(),
                 catalog.getSchema());
 
-        repository.createGeonameTableIfNotExists(
+        repository.createTableIfNotExists(
                 catalog.getName(),
                 catalog.getSchema(),
                 catalog.getTable());
