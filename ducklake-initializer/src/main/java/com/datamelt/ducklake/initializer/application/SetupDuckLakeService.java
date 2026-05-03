@@ -47,16 +47,24 @@ public class SetupDuckLakeService implements SetupDuckLakeUseCase {
         repository.attachDuckLake(
                 pg.toCatalogConnectionString(),
                 minio.toDataPath(),
-                catalog.getName());
+                catalog.getName(),
+                catalog.getDataInliningRowLimit());
 
         repository.createSchemaIfNotExists(
                 catalog.getName(),
                 catalog.getSchema());
 
-        repository.createTableIfNotExists(
-                catalog.getName(),
-                catalog.getSchema(),
-                catalog.getTable());
+        // ── Only create table when a schema is explicitly configured ──────────
+        var columnDdl = catalog.getTableSchema();
+        if (columnDdl != null && !columnDdl.isBlank()) {
+            repository.createTableIfNotExists(
+                    catalog.getName(),
+                    catalog.getSchema(),
+                    catalog.getTable(),
+                    columnDdl.strip());
+        } else {
+            log.info("No table-schema configured – skipping CREATE TABLE");
+        }
 
         log.info("DuckLake setup completed");
     }

@@ -6,9 +6,9 @@ public interface DuckLakeRepository {
 
     void createS3Secret(String keyId, String secret, String endpoint);
 
-    void attachDuckLake(String catalogConnectionString, String dataPath, String name);
+    void attachDuckLake(String catalogConnectionString, String dataPath, String name, int dataInliningRowLimit);
 
     void createSchemaIfNotExists(String duckLakeName, String schema);
 
-    void createTableIfNotExists(String duckLakeName, String schema, String table);
+    void createTableIfNotExists(String duckLakeName, String schema, String table, String columnDdl);
 }

@@ -104,12 +104,34 @@ public class DataWriterProperties {
         private String name;
         private String schema;
         private String table;
+        private int     dataInliningRowLimit = 0;   // NEW
+        private String  tableSchema;
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
 
         public String getSchema() { return schema; }
         public void setSchema(String schema) { this.schema = schema; }
+
+        public int getDataInliningRowLimit()
+        {
+            return dataInliningRowLimit;
+        }
+
+        public void setDataInliningRowLimit(int dataInliningRowLimit)
+        {
+            this.dataInliningRowLimit = dataInliningRowLimit;
+        }
+
+        public String getTableSchema()
+        {
+            return tableSchema;
+        }
+
+        public void setTableSchema(String tableSchema)
+        {
+            this.tableSchema = tableSchema;
+        }
 
         public String getTable() { return table; }
         public void setTable(String table) { this.table = table; }

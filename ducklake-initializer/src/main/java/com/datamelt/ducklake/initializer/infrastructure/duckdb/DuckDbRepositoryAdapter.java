@@ -53,11 +53,24 @@ public class DuckDbRepositoryAdapter implements DuckLakeRepository {
     }
 
     @Override
-    public void attachDuckLake(String catalogConnectionString, String dataPath, String name) {
-        log.info("Attaching DuckLake '{}' (data path: {})", name, dataPath);
+    public void attachDuckLake(String catalogConnectionString, String dataPath,
+                               String name, int dataInliningRowLimit) {
+        log.info("Attaching DuckLake '{}' (data path: {}, inlining limit: {})",
+                name, dataPath, dataInliningRowLimit);
         withConnection(conn -> execute(conn, """
-                ATTACH IF NOT EXISTS 'ducklake:postgres:%s' AS %s (DATA_PATH '%s')
-                """.formatted(catalogConnectionString, name, dataPath)));
+            ATTACH IF NOT EXISTS 'ducklake:postgres:%s' AS %s \
+            (DATA_PATH '%s', DATA_INLINING_ROW_LIMIT %d)
+            """.formatted(catalogConnectionString, name,
+                dataPath, dataInliningRowLimit)));
+    }
+
+    @Override
+    public void createTableIfNotExists(String duckLakeName, String schema,
+                                       String table, String columnDdl) {
+        log.info("Creating table if not exists: {}.{}.{}", duckLakeName, schema, table);
+        withConnection(conn -> execute(conn,
+                "CREATE TABLE IF NOT EXISTS %s.%s.%s (%s)"
+                        .formatted(duckLakeName, schema, table, columnDdl)));
     }
 
     @Override
@@ -65,24 +78,6 @@ public class DuckDbRepositoryAdapter implements DuckLakeRepository {
         log.info("Creating schema if not exists: {}.{}", duckLakeName, schema);
         withConnection(conn -> execute(conn,
                 "CREATE SCHEMA IF NOT EXISTS %s.%s".formatted(duckLakeName, schema)));
-    }
-
-    @Override
-    public void createTableIfNotExists(String duckLakeName, String schema, String table) {
-        log.info("Creating table if not exists: {}.{}.{}", duckLakeName, schema, table);
-        String createTableStatement = """
-                    create table if not exists %s.%s.%s (
-                      id  uuid,
-                      first_name varchar,
-                      last_name varchar,
-                       email varchar,
-                       age bigint,
-                       address  struct(street varchar, housenumber bigint, city varchar, postalcode varchar, country varchar),
-                       created_at timestamp
-                    );
-                    """.formatted(duckLakeName, schema, table);
-
-        withConnection(conn -> execute(conn, createTableStatement.formatted(duckLakeName, schema, table)));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

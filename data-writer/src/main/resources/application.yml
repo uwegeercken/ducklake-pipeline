@@ -30,5 +30,6 @@ data-writer:
       name: ${DUCKLAKE_NAME:ducklake1}
       schema: ${DUCKLAKE_SCHEMA:schema1}
       table: ${DUCKLAKE_TABLE:person}
+      data-inlining-row-limit: ${DUCKLAKE_INLINING_LIMIT:0}
   batch:
     size: ${BATCH_SIZE:100}

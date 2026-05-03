@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * Outbound Adapter: schreibt S3-Dateien in DuckLake via:
@@ -34,6 +35,7 @@ public class DuckLakeS3Repository implements DuckLakeRepository {
 
     private final DataWriterProperties properties;
     private Connection connection;
+    private boolean tableVerified = false;
 
     public DuckLakeS3Repository(DataWriterProperties properties) {
         this.properties = properties;
@@ -41,31 +43,101 @@ public class DuckLakeS3Repository implements DuckLakeRepository {
 
     @Override
     public void insertFromS3(List<S3FileReference> references) {
-        var catalog = properties.getDucklake().getCatalog();
-        var table   = catalog.toFullyQualifiedTable();
+        if (references.isEmpty()) return;
+
+        var table = properties.getDucklake().getCatalog().toFullyQualifiedTable();
+        var catalog = properties.getDucklake().getCatalog().getName();
 
         try {
             var conn = getOrCreateConnection();
-            for (var reference : references) {
-                insertOne(conn, table, reference);
-            }
+            ensureTableExists(conn, table, references.get(0));
+            insertBatch(conn, table, references);
+            flushInlinedData(conn, catalog);                // ← always flush after insert
         } catch (SQLException e) {
             throw new DuckDbWriteException("Failed to insert from S3", e);
         }
     }
 
-    private void insertOne(Connection conn, String table, S3FileReference reference)
-            throws SQLException {
-        var sql = "INSERT INTO %s SELECT * FROM read_json_auto('%s')"
-                .formatted(table, reference.toS3Url());
+    private void flushInlinedData(Connection conn, String catalog) throws SQLException {
+        log.debug("Flushing inlined data for catalog '{}'", catalog);
+        try (var stmt = conn.createStatement()) {
+            stmt.execute("CALL ducklake_flush_inlined_data('%s')".formatted(catalog));
+        }
+    }
 
-        log.debug("Executing: {}", sql);
-        try (Statement stmt = conn.createStatement()) {
+    private void insertBatch(Connection conn, String table, List<S3FileReference> references)
+            throws SQLException {
+
+        var urls = references.stream()
+                .map(r -> "'" + r.toS3Url() + "'")
+                .collect(Collectors.joining(", "));
+
+        var sql = "INSERT INTO %s SELECT * FROM read_json_auto([%s])"
+                .formatted(table, urls);
+
+        log.debug("Inserting batch of {} files into {}", references.size(), table);
+        try (var stmt = conn.createStatement()) {
             stmt.execute(sql);
         }
     }
 
-    // ── DuckDB connection setup ───────────────────────────────────────────────
+    // ── Table auto-creation ───────────────────────────────────────────────────
+
+    private void ensureTableExists(Connection conn, String fullyQualifiedTable,
+                                   S3FileReference sample) throws SQLException {
+        if (tableVerified) return;
+
+        if (!tableExists(conn)) {
+            log.info("Table '{}' not found – auto-creating from sample file: {}",
+                    fullyQualifiedTable, sample.toS3Url());
+            autoCreateTable(conn, fullyQualifiedTable, sample);
+        } else {
+            log.debug("Table '{}' already exists", fullyQualifiedTable);
+        }
+        tableVerified = true;
+    }
+
+    private boolean tableExists(Connection conn) throws SQLException {
+        var catalog  = properties.getDucklake().getCatalog();
+        var sql = """
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_catalog = ?
+                  AND table_schema  = ?
+                  AND table_name    = ?
+                """;
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, catalog.getName());
+            ps.setString(2, catalog.getSchema());
+            ps.setString(3, catalog.getTable());
+            try (var rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    private void autoCreateTable(Connection conn, String fullyQualifiedTable,
+                                 S3FileReference sample) throws SQLException {
+        var sql = "CREATE TABLE %s AS SELECT * FROM read_json_auto('%s') LIMIT 0"
+                .formatted(fullyQualifiedTable, sample.toS3Url());
+        log.debug("Auto-create SQL: {}", sql);
+        try (var stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        }
+    }
+
+    // ── Insert ────────────────────────────────────────────────────────────────
+
+    private void insertOne(Connection conn, String table, S3FileReference reference)
+            throws SQLException {
+        var sql = "INSERT INTO %s SELECT * FROM read_json_auto('%s')"
+                .formatted(table, reference.toS3Url());
+        log.debug("Executing: {}", sql);
+        try (var stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        }
+    }
+
+    // ── Connection / setup ────────────────────────────────────────────────────
 
     private Connection getOrCreateConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
@@ -74,6 +146,7 @@ public class DuckLakeS3Repository implements DuckLakeRepository {
             loadExtensions(connection);
             createS3Secret(connection);
             attachDuckLake(connection);
+            tableVerified = false;    // reset if connection was re-opened
         }
         return connection;
     }
@@ -87,45 +160,44 @@ public class DuckLakeS3Repository implements DuckLakeRepository {
     private void loadExtensions(Connection conn) throws SQLException {
         try (var stmt = conn.createStatement()) {
             stmt.execute("INSTALL ducklake"); stmt.execute("LOAD ducklake");
-            stmt.execute("INSTALL postgres");  stmt.execute("LOAD postgres");
-            stmt.execute("INSTALL httpfs");    stmt.execute("LOAD httpfs");
+            stmt.execute("INSTALL postgres"); stmt.execute("LOAD postgres");
+            stmt.execute("INSTALL httpfs");   stmt.execute("LOAD httpfs");
         }
-        log.debug("DuckDB extensions loaded");
     }
 
     private void createS3Secret(Connection conn) throws SQLException {
         var minio    = properties.getDucklake().getMinio();
         var endpoint = minio.toEndpointWithoutProtocol();
-
         try (var stmt = conn.createStatement()) {
             stmt.execute("""
                     CREATE OR REPLACE SECRET minio_secret (
-                        TYPE        S3,
-                        KEY_ID      '%s',
-                        SECRET      '%s',
-                        ENDPOINT    '%s',
-                        URL_STYLE   'path',
-                        USE_SSL     false,
-                        REGION      'us-east-1'
+                        TYPE      S3,
+                        KEY_ID    '%s',
+                        SECRET    '%s',
+                        ENDPOINT  '%s',
+                        URL_STYLE 'path',
+                        USE_SSL   false,
+                        REGION    'us-east-1'
                     )
                     """.formatted(minio.getAccessKey(), minio.getSecretKey(), endpoint));
         }
-        log.debug("S3 secret created for endpoint: {}", endpoint);
     }
 
     private void attachDuckLake(Connection conn) throws SQLException {
         var pg      = properties.getDucklake().getPostgres();
         var minio   = properties.getDucklake().getMinio();
         var catalog = properties.getDucklake().getCatalog();
-
         try (var stmt = conn.createStatement()) {
             stmt.execute("""
-                    ATTACH IF NOT EXISTS 'ducklake:postgres:%s' AS %s (DATA_PATH '%s', DATA_INLINING_ROW_LIMIT 0)
+                    ATTACH IF NOT EXISTS 'ducklake:postgres:%s' AS %s \
+                    (DATA_PATH '%s', DATA_INLINING_ROW_LIMIT %d)
                     """.formatted(
                     pg.toCatalogConnectionString(),
                     catalog.getName(),
-                    minio.toDataPath()));
+                    minio.toDataPath(),
+                    catalog.getDataInliningRowLimit()));          // ← NEW
         }
-        log.info("DuckLake '{}' attached", catalog.getName());
+        log.info("DuckLake '{}' attached (inlining limit: {})",
+                catalog.getName(), catalog.getDataInliningRowLimit());
     }
 }
