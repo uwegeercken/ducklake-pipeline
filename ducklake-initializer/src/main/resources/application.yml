@@ -18,12 +18,4 @@ ducklake:
     name: ${DUCKLAKE_NAME:ducklake1}
     schema: ${DUCKLAKE_SCHEMA:schema1}
     table: ${DUCKLAKE_TABLE:person}
-    table-schema: |                                           # optional – omit to skip CREATE TABLE
-      id         UUID,
-      first_name VARCHAR,
-      last_name  VARCHAR,
-      email      VARCHAR,
-      age        BIGINT,
-      address    STRUCT(street VARCHAR, housenumber BIGINT,
-                        city VARCHAR, postalcode VARCHAR, country VARCHAR),
-      created_at TIMESTAMP
+    json-schema-path: ${DUCKLAKE_JSON_SCHEMA_PATH:}   # empty = skip CREATE TABLE

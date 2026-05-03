@@ -65,12 +65,9 @@ public class DuckDbRepositoryAdapter implements DuckLakeRepository {
     }
 
     @Override
-    public void createTableIfNotExists(String duckLakeName, String schema,
-                                       String table, String columnDdl) {
-        log.info("Creating table if not exists: {}.{}.{}", duckLakeName, schema, table);
-        withConnection(conn -> execute(conn,
-                "CREATE TABLE IF NOT EXISTS %s.%s.%s (%s)"
-                        .formatted(duckLakeName, schema, table, columnDdl)));
+    public void executeDDL(String ddl) {
+        log.info("Executing DDL");
+        withConnection(conn -> execute(conn, ddl));
     }
 
     @Override

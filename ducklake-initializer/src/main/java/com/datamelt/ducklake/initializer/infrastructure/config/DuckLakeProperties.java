@@ -92,8 +92,7 @@ public class DuckLakeProperties {
         private String schema;
         private String table;
         private int     dataInliningRowLimit = 0;   // NEW
-        private String  tableSchema;
-
+        private String  jsonSchemaPath;
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
@@ -114,14 +113,22 @@ public class DuckLakeProperties {
             this.dataInliningRowLimit = dataInliningRowLimit;
         }
 
-        public String getTableSchema()
+        public String getJsonSchemaPath()
         {
-            return tableSchema;
+            return jsonSchemaPath;
         }
 
-        public void setTableSchema(String tableSchema)
+        public void setJsonSchemaPath(String jsonSchemaPath)
         {
-            this.tableSchema = tableSchema;
+            this.jsonSchemaPath = jsonSchemaPath;
+        }
+
+        public boolean hasJsonSchema() {
+            return jsonSchemaPath != null && !jsonSchemaPath.isBlank();
+        }
+
+        public String toFullyQualifiedTable() {
+            return "%s.%s.%s".formatted(name, schema, table);
         }
     }
 }
